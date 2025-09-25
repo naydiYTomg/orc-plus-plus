@@ -140,14 +140,16 @@ namespace orc::utils::arithmetic {
     template<typename T>
     requires std::is_arithmetic_v<T>
     ORC_API constexpr auto wrapping_add(const T self, const T rhs) -> T {
+#pragma push_macro("max")
+#pragma push_macro("min")
 #undef max
 #undef min
         const T max = std::numeric_limits<T>::max();
         if (max - self < rhs) {
             return std::numeric_limits<T>::min() + (max - self - rhs);
         }
-#define max(a,b)            (((a) > (b)) ? (a) : (b))
-#define min(a,b)            (((a) < (b)) ? (a) : (b))
+#pragma pop_macro("min")
+#pragma pop_macro("max")
         return self + rhs;
     }
     template<typename T>

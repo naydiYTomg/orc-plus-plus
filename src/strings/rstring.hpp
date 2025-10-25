@@ -78,10 +78,9 @@ namespace orc::strings {
                 return *this;
             }
 
-            friend auto operator<<(std::ostream& os, const mutable_u8string& str) -> std::ostream& {
-                for (usize i = 0; i < str.len; ++i)
-                    os << str.data[i];
-                return os;
+            constexpr auto print(std::ostream& os) const -> void override {
+                for (usize i = 0; i < len; ++i)
+                    os << data[i];
             }
 
             [[nodiscard]] constexpr auto size() const noexcept -> usize override { return len; }

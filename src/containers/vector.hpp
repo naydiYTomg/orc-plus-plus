@@ -5,11 +5,11 @@
 #include <container.hpp>
 #include <memory>
 #include <ostream>
-
-#include "rstring.hpp"
+#include "iterator.hpp"
 
 using namespace orc::core::container;
 using namespace orc::core::defines;
+using namespace orc::iterators;
 
 namespace orc::containers {
 
@@ -55,6 +55,9 @@ namespace orc::containers {
             }
         }
 
+        [[nodiscard]] constexpr auto start() const -> T* { return data; }
+        [[nodiscard]] constexpr auto end() const -> T* { return data + len; }
+
         [[nodiscard]] constexpr auto size() const noexcept -> usize override { return len; }
         [[nodiscard]] constexpr auto is_empty() const noexcept -> bool override { return len == 0; }
         [[nodiscard]] constexpr auto get(const usize idx) const -> const T& override {
@@ -89,15 +92,21 @@ namespace orc::containers {
             len--;
             return tmp;
         }
-
-        friend auto operator<<(std::ostream& os, const vector& vec) -> std::ostream& {
+        constexpr auto print(std::ostream& os) const -> void override {
             os << '[';
-            for (usize i = 0; i < vec.len; i++) {
-                os << vec.get(i);
-                if (i != vec.len - 1) os << ", ";
+            for (usize i = 0; i < len; i++) {
+                os << get(i);
+                if (i != len - 1) os << ", ";
             }
             os << ']';
-            return os;
+        }
+
+        [[nodiscard]] static auto from_iter(std::unique_ptr<iterator<T>> iter) -> vector {
+            vector a;
+            foreach(i, (*iter), {
+                a.push(i);
+            })
+            return a;
         }
 
     private:
@@ -140,6 +149,29 @@ namespace orc::containers {
             data = new_data;
             cap = target;
         }
+    };
+
+    template<typename T>
+    class ORC_API vector_iterator final : public iterator<T> {
+    public:
+        explicit vector_iterator(vector<T>& vec) {
+            begin = vec.start();
+            end = vec.end();
+        }
+        auto clone() const -> std::unique_ptr<iterator<T>> override {
+            return std::make_unique<vector_iterator>(*this);
+        }
+        [[nodiscard]] constexpr auto has_next() const noexcept -> bool override { return begin+pos != end; }
+        [[nodiscard]] constexpr auto next() -> typename iterator<T>::value_type override {
+            if (!has_next()) throw iteration_end{};
+            auto tmp = *(begin + pos);
+            pos++;
+            return tmp;
+        }
+    private:
+        T* begin = nullptr;
+        T* end = nullptr;
+        usize pos = 0;
     };
 
 }

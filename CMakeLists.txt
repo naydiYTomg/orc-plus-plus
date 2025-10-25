@@ -15,6 +15,7 @@ include_directories(
         src/optional
         src/iterators
         src/containers
+        src/floating
 )
 
 add_library(orc++ SHARED src/library.cpp)
